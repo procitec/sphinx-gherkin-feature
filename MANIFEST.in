@@ -3,4 +3,3 @@ include LICENSE
 include CHANGELOG.md
 recursive-include docs *.py *.rst
 recursive-include tests *.py
-recursive-include external *.py *.md *.patch

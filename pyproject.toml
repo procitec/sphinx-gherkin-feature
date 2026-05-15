@@ -4,10 +4,10 @@ build-backend = "hatchling.build"
 
 [project]
 name = "sphinx-gherkin-feature"
-version = "0.1.2"
+version = "0.1.3"
 description = "Render Gherkin feature scripts in Sphinx and optionally write them as .feature files."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 license = "MIT"
 authors = [
   { name = "Your Name" }
@@ -22,8 +22,6 @@ classifiers = [
   "License :: OSI Approved :: MIT License",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.10",
-  "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Topic :: Documentation",
@@ -34,6 +32,7 @@ dependencies = [
   "Sphinx>=7.2",
   "Pygments>=2.14",
   "requests<2.34",
+  "gherkin-lint",
 ]
 
 [project.optional-dependencies]
@@ -60,6 +59,9 @@ Issues = "https://github.com/your-org/sphinx-gherkin-feature/issues"
 [tool.uv]
 package = true
 
+[tool.uv.sources]
+gherkin-lint = { git = "https://github.com/procitec/gherkin-lint.git", tag = "v26.1.1" }
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/sphinx_gherkin_feature"]
 
@@ -70,7 +72,7 @@ addopts = "-ra"
 [tool.ruff]
 line-length = 100
 src = ["src", "tests"]
-extend-exclude = ["external", ".venv"]
+extend-exclude = [".venv"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]

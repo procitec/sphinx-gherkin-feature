@@ -1,6 +1,10 @@
 from __future__ import annotations
 
-from sphinx_gherkin_feature.lint import _run_linter
+import importlib
+
+import pytest
+
+from sphinx_gherkin_feature.lint import _create_linter, _run_linter
 
 
 class TextOnlyLinter:
@@ -37,3 +41,20 @@ def test_run_linter_keeps_lint_file_fallback() -> None:
 
     assert errors == [{"line": 1, "type": "demo", "message": "login.feature"}]
     assert linter.path_text == "Feature: Login\n"
+
+
+def test_real_gherkin_lint_release_reports_invalid_feature_text() -> None:
+    pytest.importorskip("gherkin_lint.gherkin_lint")
+
+    module = importlib.import_module("gherkin_lint.gherkin_lint")
+    assert hasattr(module, "GherkinLint")
+
+    linter = _create_linter(indent_size=4)
+    errors = _run_linter(
+        linter,
+        "Scenario: Missing feature keyword\nGiven\n",
+        "invalid.feature",
+    )
+
+    assert errors
+    assert all(hasattr(error, "get") or hasattr(error, "message") for error in errors)

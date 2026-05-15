@@ -1,8 +1,9 @@
-"""Optional integration with procitec/gherkin-lint."""
+"""Integration with procitec/gherkin-lint."""
 
 from __future__ import annotations
 
 import tempfile
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
@@ -24,6 +25,7 @@ def _error_message(error: Any) -> str:
 
 
 def _create_linter(indent_size: int) -> Any:
+    """Create the real procitec/gherkin-lint linter instance."""
     from gherkin_lint.gherkin_lint import GherkinLint
 
     try:
@@ -46,20 +48,47 @@ def _call_lint_string(linter: Any, code: str, filename: str) -> list[Any]:
         return list(linter.lint_string(code, filename))
 
 
+def _call_lint_lines(linter: Any, lines: Sequence[str], filename: str) -> list[Any]:
+    try:
+        return list(linter.lint_lines(lines, source_name=filename))
+    except TypeError:
+        return list(linter.lint_lines(lines, filename))
+
+
 def _call_lint_file(linter: Any, code: str, filename: str) -> list[Any]:
+    """Run file-based gherkin-lint APIs against a temporary feature file.
+
+    procitec/gherkin-lint v26.1.0 exposes a file-oriented API. The Sphinx
+    directive still receives its content as an in-memory string, so this bridge
+    keeps string-based use possible without vendoring or patching upstream code.
+    """
     with tempfile.TemporaryDirectory() as tmpdir:
         path = Path(tmpdir) / filename
         path.write_text(code, encoding="utf-8")
         return list(linter.lint_file(path))
 
 
-def _run_linter(linter: Any, code: str, filename: str) -> list[Any]:
-    """Run gherkin-lint, preferring the in-memory string interface.
+def _split_lines_preserving_endings(code: str) -> list[str]:
+    """Split code the same way the upstream file-based linter does."""
+    lines: list[str] = []
+    buf = ""
+    for ch in code:
+        buf += ch
+        if ch in ("\n", "\r"):
+            lines.append(buf)
+            buf = ""
+    if buf:
+        lines.append(buf)
+    return lines
 
-    The preferred upstream API is ``GherkinLint.lint_text(content,
-    source_name=...)``. ``lint_string`` and ``lint_file`` remain compatibility
-    fallbacks so the Sphinx extension still works with older gherkin-lint
-    versions.
+
+def _run_linter(linter: Any, code: str, filename: str) -> list[Any]:
+    """Run gherkin-lint for an in-memory feature script.
+
+    The bridge uses the real installed ``gherkin_lint`` package. If a release
+    provides an in-memory API, that API is used directly. For v26.1.0, which is
+    file-oriented, the bridge writes a temporary ``.feature`` file and calls
+    ``lint_file``.
     """
     if hasattr(linter, "lint_text"):
         return _call_lint_text(linter, code, filename)
@@ -67,10 +96,13 @@ def _run_linter(linter: Any, code: str, filename: str) -> list[Any]:
     if hasattr(linter, "lint_string"):
         return _call_lint_string(linter, code, filename)
 
+    if hasattr(linter, "lint_lines"):
+        return _call_lint_lines(linter, _split_lines_preserving_endings(code), filename)
+
     if hasattr(linter, "lint_file"):
         return _call_lint_file(linter, code, filename)
 
-    raise TypeError("gherkin-lint exposes neither lint_text, lint_string nor lint_file")
+    raise TypeError("gherkin-lint exposes no supported linting API")
 
 
 def lint_gherkin(

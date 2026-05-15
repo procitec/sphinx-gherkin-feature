@@ -28,11 +28,14 @@ For local development:
 uv sync --group dev --group docs
 ```
 
-For use in a Sphinx project managed with `uv`:
+The project pins `gherkin-lint` to the upstream GitHub release tag `v26.1.1` via `tool.uv.sources`:
 
-```bash
-uv add sphinx-gherkin-feature
+```toml
+[tool.uv.sources]
+gherkin-lint = { git = "https://github.com/procitec/gherkin-lint.git", tag = "v26.1.1" }
 ```
+
+For use in another uv-managed Sphinx project, add this package and the same source override for `gherkin-lint` in that project's `pyproject.toml`.
 
 ## Configuration
 
@@ -56,7 +59,7 @@ gherkin_feature_write_file = False
 # Absolute paths are used as configured.
 gherkin_feature_output_dir = "gherkin"
 
-# Optional lint integration with procitec/gherkin-lint.
+# Lint integration with procitec/gherkin-lint v26.1.0.
 gherkin_feature_lint = False
 gherkin_feature_lint_indent_size = 4
 
@@ -114,27 +117,20 @@ gherkin_feature_highlight = False
 
 ## Linting
 
-When `gherkin_feature_lint = True`, the extension tries to import `gherkin_lint.gherkin_lint.GherkinLint`. The linter is intentionally not declared as a mandatory dependency because the integration is optional and the upstream package may be installed from a local checkout or Git source.
+When `gherkin_feature_lint = True`, the extension imports the real upstream package:
 
-The integration prefers a string API when the installed linter exposes one:
-
-1. `lint_text(code, source_name=...)`
-2. `lint_string(code, source_name=...)`
-3. fallback to `lint_file(path)` using a temporary `.feature` file
-
-This keeps the extension compatible with both a current file-based linter and a future string-based API.
-
-Example installation from a local checkout:
-
-```bash
-uv pip install -e ../gherkin-lint
+```python
+from gherkin_lint.gherkin_lint import GherkinLint
 ```
 
-Example installation from Git, when network access is available:
+The Sphinx directive receives feature scripts as strings. The bridge therefore accepts strings and maps them to whatever API the installed upstream release exposes:
 
-```bash
-uv pip install "gherkin-lint @ git+https://github.com/procitec/gherkin-lint"
-```
+1. `lint_text(code, source_name=...)`, if present
+2. `lint_string(code, source_name=...)`, if present
+3. `lint_lines(lines, source_name=...)`, if present
+4. `lint_file(path)` via a temporary `.feature` file
+
+For `procitec/gherkin-lint` release `v26.1.1`, the file-based path is expected. No patched or vendored copy of `gherkin-lint` is used by this package.
 
 ## Development with uv
 
