@@ -11,6 +11,7 @@ from sphinx.util import logging
 from sphinx.util.docutils import SphinxDirective
 
 from .lint import lint_gherkin
+from .source import content_to_gherkin_source
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +73,7 @@ class FeatureDirective(SphinxDirective):
         except ValueError as exc:
             raise self.error(str(exc)) from exc
 
-        code = "\n".join(self.content)
+        code = content_to_gherkin_source(self.content)
         if not code.strip():
             raise self.error("gherkin:feature requires a non-empty script body")
 

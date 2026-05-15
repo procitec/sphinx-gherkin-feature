@@ -9,6 +9,8 @@ from typing import Any
 
 from sphinx.util import logging
 
+from .source import ensure_final_newline
+
 logger = logging.getLogger(__name__)
 
 
@@ -64,7 +66,7 @@ def _call_lint_file(linter: Any, code: str, filename: str) -> list[Any]:
     """
     with tempfile.TemporaryDirectory() as tmpdir:
         path = Path(tmpdir) / filename
-        path.write_text(code, encoding="utf-8")
+        path.write_text(ensure_final_newline(code), encoding="utf-8", newline="\n")
         return list(linter.lint_file(path))
 
 
@@ -86,9 +88,9 @@ def _run_linter(linter: Any, code: str, filename: str) -> list[Any]:
     """Run gherkin-lint for an in-memory feature script.
 
     The bridge uses the real installed ``gherkin_lint`` package. If a release
-    provides an in-memory API, that API is used directly. For v26.1.0, which is
-    file-oriented, the bridge writes a temporary ``.feature`` file and calls
-    ``lint_file``.
+    exposes ``lint_file``, the bridge writes a temporary ``.feature`` file and
+    calls that file-based API. In-memory APIs remain as fallbacks for other
+    releases or test doubles that do not expose ``lint_file``.
     """
     if hasattr(linter, "lint_text"):
         return _call_lint_text(linter, code, filename)
@@ -122,6 +124,8 @@ def lint_gherkin(
             location=location,
         )
         return
+
+    code = ensure_final_newline(code)
 
     try:
         errors = _run_linter(linter, code, filename)

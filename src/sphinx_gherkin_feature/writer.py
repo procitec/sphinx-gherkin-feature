@@ -7,6 +7,8 @@ from pathlib import Path
 from sphinx.application import Sphinx
 from sphinx.util import logging
 
+from .source import ensure_final_newline
+
 logger = logging.getLogger(__name__)
 
 
@@ -42,5 +44,5 @@ def write_feature_files(app: Sphinx, exception: Exception | None) -> None:
 
     for filename, item in sorted(features.items()):
         target = target_dir / f"{filename}.feature"
-        target.write_text(item["code"].rstrip() + "\n", encoding="utf-8")
+        target.write_text(ensure_final_newline(item["code"]), encoding="utf-8", newline="\n")
         logger.info("wrote Gherkin feature file %s", target)

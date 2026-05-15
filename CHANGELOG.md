@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.4
+
+- Ensure generated files and code has newline at EOF.
 
 ## 0.1.3
 

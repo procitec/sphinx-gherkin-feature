@@ -25,7 +25,27 @@ class FileFallbackLinter:
         return [{"line": 1, "type": "demo", "message": str(path.name)}]
 
 
-def test_run_linter_prefers_lint_text() -> None:
+class FileAndTextLinter(FileFallbackLinter):
+    def __init__(self) -> None:
+        super().__init__()
+        self.text_called = False
+
+    def lint_text(self, content: str, source_name: str = "<string>"):
+        self.text_called = True
+        return [{"line": 1, "type": "demo", "message": "from text"}]
+
+
+def test_run_linter_uses_lint_file_when_available() -> None:
+    linter = FileAndTextLinter()
+
+    errors = _run_linter(linter, "Feature: Login\n", "login.feature")
+
+    assert errors == [{"line": 1, "type": "demo", "message": "login.feature"}]
+    assert linter.path_text == "Feature: Login\n"
+    assert not linter.text_called
+
+
+def test_run_linter_keeps_text_fallback_for_text_only_linters() -> None:
     linter = TextOnlyLinter()
 
     errors = _run_linter(linter, "Feature: Login\n", "login.feature")
@@ -34,10 +54,10 @@ def test_run_linter_prefers_lint_text() -> None:
     assert linter.called_with == ("Feature: Login\n", "login.feature")
 
 
-def test_run_linter_keeps_lint_file_fallback() -> None:
+def test_run_linter_file_api_gets_final_newline() -> None:
     linter = FileFallbackLinter()
 
-    errors = _run_linter(linter, "Feature: Login\n", "login.feature")
+    errors = _run_linter(linter, "Feature: Login", "login.feature")
 
     assert errors == [{"line": 1, "type": "demo", "message": "login.feature"}]
     assert linter.path_text == "Feature: Login\n"

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "sphinx-gherkin-feature"
-version = "0.1.3"
+version = "0.1.4"
 description = "Render Gherkin feature scripts in Sphinx and optionally write them as .feature files."
 readme = "README.md"
 requires-python = ">=3.12"
