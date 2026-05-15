@@ -12,11 +12,7 @@ def test_content_to_gherkin_source_adds_final_newline() -> None:
         ]
     )
 
-    assert source == (
-        "Feature: Login\n"
-        "  Scenario: Successful login\n"
-        "    Given a user exists\n"
-    )
+    assert source == ("Feature: Login\n  Scenario: Successful login\n    Given a user exists\n")
 
 
 def test_content_to_gherkin_source_does_not_add_extra_newline() -> None:

@@ -58,8 +58,7 @@ def test_sphinx_build_lints_feature_with_added_final_newline(tmp_path: Path) -> 
     srcdir.mkdir()
 
     (srcdir / "conf.py").write_text(
-        "extensions = ['sphinx_gherkin_feature']\n"
-        "gherkin_feature_lint = True\n",
+        "extensions = ['sphinx_gherkin_feature']\ngherkin_feature_lint = True\n",
         encoding="utf-8",
     )
     (srcdir / "index.rst").write_text(
